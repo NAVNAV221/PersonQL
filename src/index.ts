@@ -1,113 +1,49 @@
+// npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
-import { pullRequests, persons, commits } from './consts';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import { typeDefs } from './typeDefs.js';
+import { resolvers } from './resolvers.js';
 
+interface MyContext {
+  token?: string;
+}
 
-// A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
-export const typeDefs = `#graphql
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
+// Required logic for integrating with Express
+const app = express();
+// Our httpServer handles incoming requests to our Express app.
+// Below, we tell Apollo Server to "drain" this httpServer,
+// enabling our servers to shut down gracefully.
+const httpServer = http.createServer(app);
 
-  type Person {
-    id: String
-    name: String
-    age: Int
-    email: String
-    pullRequests: [PullRequest]!
-  }
+// Same ApolloServer initialization as before, plus the drain plugin
+// for our httpServer.
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+// Ensure we wait for our server to start
+await server.start();
 
-  type PullRequest {
-    id: ID!
-    title: String!
-    description: String
-    author: Person!
-    createdAt: String!
-    updatedAt: String
-    status: PullRequestStatus!
-    sourceBranch: String!
-    destinationBranch: String!
-    reviewers: [Person!]
-    comments: [Comment!]
-    commits: [Commit!]!
-  }
+// Set up our Express middleware to handle CORS, body parsing,
+// and our expressMiddleware function.
+app.use(
+  '/',
+  cors<cors.CorsRequest>(),
+  express.json(),
+  // expressMiddleware accepts the same arguments:
+  // an Apollo Server instance and optional configuration options
+  expressMiddleware(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+  }),
+);
 
-  type Commit {
-    id: ID!
-    message: String!
-    author: Person!
-    timestamp: String!
-    hash: String!
-  }
-
-  enum PullRequestStatus {
-    OPEN
-    CLOSED
-    MERGED
-  }
-
-  type Comment {
-    id: ID!
-    author: Person!
-    content: String!
-    createdAt: String!
-  }
-
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
-  type Query {
-    persons: [Person]
-    commits: [Commit]
-    comments: [Comment]
-    pullRequests: [PullRequest!]!
-  }
-`;
-
-const resolvers = {
-    Person : {
-      async pullRequests(person){
-        try {
-          if (!person || !person.name) {
-            console.error("Invalid person object or missing name");
-            return [];
-          }    
-          const personName = person.name.trim().toLowerCase();
-          
-          const personPullRequests = pullRequests.filter(pullRequest => {
-            const authorName = (pullRequest.author?.name || "").trim().toLowerCase();
-            return authorName === personName;
-          });
-    
-          console.log(`Found ${personPullRequests.length} pull requests for ${person.name}`);
-          return personPullRequests;
-        } catch (error) {
-          console.error("Error in resolving pull requests:", error);
-          return [];
-        }
-      }
-    },
-    Query: {
-      persons: () => persons,
-      commits: () => commits,
-      pullRequests: () => pullRequests,
-    },
-};
-
-// The ApolloServer constructor requires two parameters: your schema
-// definition and your set of resolvers.
-const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-  });
-  
-  // Passing an ApolloServer instance to the `startStandaloneServer` function:
-  //  1. creates an Express app
-  //  2. installs your ApolloServer instance as middleware
-  //  3. prepares your app to handle incoming requests
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: 4000 },
-  });
-  
-  export { server };
-  console.log(`🚀  Server ready at: ${url}`);
+// Modified server startup
+await new Promise<void>((resolve) =>
+  httpServer.listen({ port: 4000 }, resolve),
+);
+console.log(`🚀 Server ready at http://localhost:4000/`);
