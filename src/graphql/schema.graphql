@@ -1,0 +1,45 @@
+type Person {
+  id: String
+  name: String
+  age: Int
+  email: String
+}
+type PullRequest {
+  id: ID!
+  title: String!
+  description: String
+  author: Person!
+  createdAt: String!
+  updatedAt: String
+  status: PullRequestStatus!
+  sourceBranch: String!
+  destinationBranch: String!
+  reviewers: [Person!]
+  comments: [Comment!]
+  commits: [Commit!]!
+}
+type Commit {
+  id: ID!
+  message: String!
+  author: Person!
+  timestamp: String!
+  hash: String!
+}
+enum PullRequestStatus {
+  OPEN
+  CLOSED
+  MERGED
+}
+type Comment {
+  id: ID!
+  author: Person!
+  content: String!
+  createdAt: String!
+}
+type Query {
+  persons: [Person]
+  commits: [Commit]
+  comments: [Comment]
+  pullRequests: [PullRequest!]!
+  personById(id: ID!): Person
+}
