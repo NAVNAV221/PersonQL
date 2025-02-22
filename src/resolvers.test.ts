@@ -3,7 +3,7 @@ import { describe, expect, it } from '@jest/globals'
 
 const getUserQuery = `
 query {
-  personByName(name: "Nave") {
+  personById(id: "12345678") {
     id
     name
     age
@@ -25,7 +25,7 @@ describe("resolvers", () => {
 
     expect(meResponse).toEqual({
       data: {
-        personByName: {
+        personById: {
           id: "12345678",
           name: "Nave",
           age: 22,
