@@ -1,35 +1,39 @@
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
-import express from 'express';
-import http from 'http';
-import { resolvers } from './resolvers.js';
-import { readFileSync } from 'node:fs'
+import express from "express";
+import dotenv from "dotenv";
+import {expressMiddleware} from "@apollo/server/express4";
+import {ApolloServer} from "@apollo/server";
+import { typeDefs, resolvers } from "./graphql/index";
 
-const typeDefs = readFileSync('./src/graphql/schema.graphql', 'utf8')
-
+dotenv.config();
 const app = express();
+const port = process.env.PORT || 4000;
 
-const httpServer = http.createServer(app);
+const bootstrapServer = async () => {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers
+  });
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-});
+  await server.start();
 
-await server.start();
+  app.use(express.json());
 
-app.use(
-  '/',
-  express.json(),
-  // expressMiddleware accepts the same arguments:
-  // an Apollo Server instance and optional configuration options
-  expressMiddleware(server),
-);
+  app.use(express.urlencoded({
+    extended: true,
+    inflate: true,
+    limit: "1mb",
+    parameterLimit: 200,
+  }));
 
-await new Promise<void>((resolve) =>
-  httpServer.listen({ port: 4000 }, resolve),
-);
+  app.use("/", expressMiddleware(server));
 
-console.log(`🚀 Server ready at http://localhost:4000/`);
+  app.get("/health", (req, res) => {
+    res.send("Up and runnign");
+  });
+
+  app.listen(port, () => {
+    console.log(`🚀 Graphql ready at http://localhost:${port}/`);
+  });
+};
+
+bootstrapServer();

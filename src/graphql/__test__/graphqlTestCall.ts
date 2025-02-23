@@ -1,9 +1,8 @@
 import { graphql } from "graphql";
 import { makeExecutableSchema } from "graphql-tools";
-import { readFileSync } from 'node:fs'
 
-import { resolvers } from './resolvers.js';
-const typeDefs = readFileSync('./src/graphql/schema.graphql', 'utf8')
+import { resolvers } from '../index';
+import { typeDefs } from "../index";
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
