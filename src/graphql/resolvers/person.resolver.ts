@@ -1,13 +1,13 @@
-import { PersonResolvers } from '../../generated/types';
+import { Resolvers } from '../../generated/types';
 import { persons } from '../consts/person';
 
-export const personsResolver: PersonResolvers = {
+export const personsResolver: Resolvers = {
   Query: {
-    async persons(_: any,) {
+    persons() {
       return persons;
     },
-    async person(_: any, args: Record<string, any>) {
-      return persons.find((person) => person.id === args.id);
+    person: (_, { id }) => {
+      return persons.find((person) => person.id === id) || null;
     },
   },
 };
