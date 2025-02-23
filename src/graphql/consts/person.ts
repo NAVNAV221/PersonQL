@@ -1,4 +1,6 @@
-export const persons = [
+import { Person } from "../../generated/types";
+
+export const persons: Person[] = [
     {
         id: '12345678',
         name: 'Nave',

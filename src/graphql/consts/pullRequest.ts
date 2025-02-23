@@ -1,6 +1,7 @@
 import { persons } from "./person";
+import { PullRequest, PullRequestStatus } from "../../generated/types";
 
-export const pullRequests = [
+export const pullRequests: PullRequest[]  = [
     {
         id: "PR-001",
         title: "Fix typos in foo module",
@@ -8,7 +9,7 @@ export const pullRequests = [
         author: persons[0],
         createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
         updatedAt: new Date(Date.now() - 1000 * 30).toISOString(), // 30 seconds ago
-        status: "OPEN",
+        status: PullRequestStatus.Open,
         sourceBranch: "fix-typos",
         destinationBranch: "main",
         reviewers: [persons[1]], // Dror is reviewing Nave's PR
@@ -20,7 +21,7 @@ export const pullRequests = [
         author: persons[1],
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
         updatedAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
-        status: "OPEN",
+        status: PullRequestStatus.Closed,
         sourceBranch: "refactor-todos",
         destinationBranch: "main",
         reviewers: [persons[0]], // Nave is reviewing Dror's PR
