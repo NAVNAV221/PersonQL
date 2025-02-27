@@ -1,0 +1,23 @@
+type PullRequest {
+  id: ID!
+  title: String!
+  description: String
+  author: Person!
+  createdAt: String!
+  updatedAt: String
+  status: PullRequestStatus!
+  sourceBranch: String!
+  destinationBranch: String!
+  reviewers: [Person!]
+}
+
+enum PullRequestStatus {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+type Query {
+  pullRequest: PullRequest
+  pullRequests: [PullRequest]
+}
